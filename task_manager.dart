@@ -66,7 +66,7 @@ class TaskManager {
       File file = File('tasks.txt');
       if (await file.exists()) {
         String jsonString = await file.readAsString();
-        List<dynamic> jsonList = jsonDecode(jsonString);
+        List<Map<String, dynamic>> jsonList = jsonDecode(jsonString);
         return jsonList.map((json) => TaskModel.fromJson(json)).toList();
       } else {
         return [];
