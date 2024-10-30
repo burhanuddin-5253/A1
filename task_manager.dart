@@ -6,26 +6,22 @@ class TaskManager {
   List<TaskModel> _tasks = [];
 
   TaskManager() {
-    _initializeTasks();
+    loadTasks();
   }
 
-  Future<void> _initializeTasks() async {
-    _tasks = await loadTasks();
-  }
-
-  Future<void> addTask(TaskModel task) async {
+  void addTask(TaskModel task) {
     _tasks.add(task);
-    await saveTasks(); 
+    saveTasks(); 
   }
 
-  Future<void> updateTask(int index, TaskModel task) async {
+  void updateTask(int index, TaskModel task) {
     _tasks[index] = task;
-    await saveTasks(); 
+    saveTasks(); 
   }
 
-  Future<void> deleteTask(int index) async {
+  void deleteTask(int index){
     _tasks.removeAt(index);
-    await saveTasks(); 
+    saveTasks(); 
   }
 
   TaskModel? searchByTitle(String title) {
@@ -49,31 +45,35 @@ class TaskManager {
     return _tasks.where((task) => task.isCompleted == false).toList();
   }
 
-  Future<void> toggleTaskCompletion(int index) async {
+  void toggleTaskCompletion(int index) {
     bool? toggle = _tasks[index].isCompleted;
     _tasks[index].isCompleted = !toggle!;
-    await saveTasks(); 
+    saveTasks(); 
   }
 
-  Future<void> saveTasks() async {
-    File file = File('tasks.txt');
-    String updatedJsonString = jsonEncode(_tasks.map((task) => task.toJson()).toList());
-    await file.writeAsString(updatedJsonString);
+  void saveTasks() {
+    final file = File('tasks.txt');
+    final jsonList = _tasks
+        .map((task) => {
+              'title': task.title,
+              'description': task.description,
+              'isCompleted': task.isCompleted
+            })
+        .toList();
+    file.writeAsStringSync(jsonEncode(jsonList));
   }
 
-  Future<List<TaskModel>> loadTasks() async {
-    try {
-      File file = File('tasks.txt');
-      if (await file.exists()) {
-        String jsonString = await file.readAsString();
-        List<Map<String, dynamic>> jsonList = jsonDecode(jsonString);
-        return jsonList.map((json) => TaskModel.fromJson(json)).toList();
-      } else {
-        return [];
-      }
-    } catch (e) {
-      print("Error loading tasks: $e");
-      return [];
+
+  void loadTasks() {
+    final file = File('tasks.txt');
+    if (file.existsSync()) {
+      final jsonList = jsonDecode(file.readAsStringSync()) as List;
+      _tasks = jsonList
+          .map((json) => TaskModel(
+              title: json['title'],
+              description: json['description'],
+              isCompleted: json['isCompleted']))
+          .toList();
     }
   }
 }
